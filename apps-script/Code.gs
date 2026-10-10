@@ -7,13 +7,29 @@
  * block of rows (Squad in column A) separated by blank rows. A row whose
  * Squad is set but Name is blank is an open slot. Removing a hero clears the
  * slot but keeps the Squad label so the block layout survives.
+ *
+ * Upgrade advice is produced weekly by a scheduled Claude session (see
+ * intel/ROUTINE.md), which reads this sheet plus the Settings tab and commits
+ * intel/recommendations.json to the repo's `intel` branch. The app only reads
+ * that file; no API key is involved.
  */
 
 const CONFIG = {
   sheetName: 'Sheet1',
   squads: ['Tank', 'Air', 'Missile'],
   squadSize: 5,
+  settingsSheet: 'Settings',
+  goals: ['Balanced', 'PvP', 'PvE / zombie events'],
+  adviceUrl: 'https://raw.githubusercontent.com/RASpeegle/LastWarHero/intel/intel/recommendations.json',
+  adviceCacheSeconds: 900,
 };
+
+// Rows of the Settings tab (column A label, column B value).
+const SETTINGS = [
+  { key: 'season', label: 'Season', fallback: '' },
+  { key: 'goal', label: 'Goal', fallback: 'Balanced' },
+  { key: 'notes', label: 'Notes', fallback: '' },
+];
 
 // Sheet columns A:M, in order. Header text is checked on every call so a
 // reordered sheet fails loudly instead of writing into the wrong column.
@@ -96,6 +112,68 @@ function removeHero(row, name) {
     if (!current || !sameName_(current.name, name)) throw new Error(STALE_MSG);
     clearSlot_(sheet, current.row);
   });
+}
+
+function getSettings() {
+  const out = {};
+  SETTINGS.forEach(function (d) { out[d.key] = d.fallback; });
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.settingsSheet);
+  if (!sheet || sheet.getLastRow() < 1) return out;
+  sheet.getRange(1, 1, sheet.getLastRow(), 2).getDisplayValues().forEach(function (r) {
+    const d = SETTINGS.find(function (x) { return x.label.toLowerCase() === String(r[0]).trim().toLowerCase(); });
+    if (d && String(r[1]).trim()) out[d.key] = String(r[1]).trim();
+  });
+  return out;
+}
+
+function saveSettings(input) {
+  const s = {
+    season: String((input && input.season) || '').trim(),
+    goal: String((input && input.goal) || '').trim(),
+    notes: String((input && input.notes) || '').trim().replace(/\s+/g, ' '),
+  };
+  if (s.season && !/^\d{1,2}$/.test(s.season)) throw new Error('Season must be a number, e.g. 6.');
+  if (CONFIG.goals.indexOf(s.goal) === -1) throw new Error('Goal must be one of: ' + CONFIG.goals.join(', ') + '.');
+  if (s.notes.length > 300) throw new Error('Notes are too long (300 characters max).');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.settingsSheet) || ss.insertSheet(CONFIG.settingsSheet);
+    // Season and Notes are written as text so "6" stays "6" and notes are never parsed as formulas.
+    sheet.getRange(1, 1, SETTINGS.length + 1, 2).setValues(
+      [['Setting', 'Value']].concat(SETTINGS.map(function (d) { return [d.label, "'" + s[d.key]]; })));
+    SpreadsheetApp.flush();
+  } finally {
+    lock.releaseLock();
+  }
+  return getSettings();
+}
+
+/**
+ * Returns the latest weekly advice report (or null if none has been published)
+ * plus the current settings. The report is cached briefly; pass refresh=true
+ * to bypass the cache.
+ */
+function getAdvice(refresh) {
+  const cache = CacheService.getScriptCache();
+  let body = refresh ? null : cache.get('advice');
+  if (!body) {
+    const res = UrlFetchApp.fetch(CONFIG.adviceUrl, { muteHttpExceptions: true });
+    const code = res.getResponseCode();
+    if (code === 404) return { report: null, settings: getSettings() };
+    if (code !== 200) throw new Error('Could not load the advice report (HTTP ' + code + '). Try again shortly.');
+    body = res.getContentText();
+    if (body.length < 90000) cache.put('advice', body, CONFIG.adviceCacheSeconds);
+  }
+  let report;
+  try {
+    report = JSON.parse(body);
+  } catch (e) {
+    throw new Error('The advice report is not valid JSON. The next weekly run will replace it.');
+  }
+  return { report: report, settings: getSettings() };
 }
 
 // ---------------------------------------------------------------------------

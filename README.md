@@ -44,6 +44,32 @@ Paste the new code, then **Deploy > Manage deployments > (pencil) > Version: New
 
 Optional: deploy from this repo with [`clasp`](https://github.com/google/clasp) (`clasp clone <scriptId> --rootDir apps-script`, then `clasp push` and `clasp deploy -i <deploymentId>`).
 
+## Upgrade advice
+
+The **Advice** button shows a ranked list of upgrades for your squads, and each hero card shows its next step. The advice comes from a weekly scheduled Claude session (Sundays around 6am Eastern) that runs on your Claude subscription. No API key is involved.
+
+How a weekly run works:
+
+1. It reads **Hero Stats** (the squads, plus the **Settings** tab) through the Google Drive connector.
+2. It researches only the sites in [`intel/trusted-sources.json`](intel/trusted-sources.json). Today that is cpt-hedge.com as the primary source, allclash.com and lastwartutorial.com, and pocketgamer.com for corroboration only.
+3. It ranks 6 to 10 concrete actions. Each action has the reason, a confidence level and citations.
+4. It checks the report with [`intel/validate.js`](intel/validate.js). Any citation from a site outside the trusted list fails the check.
+5. It publishes `intel/recommendations.json` to the repo's `intel` branch with [`intel/publish.sh`](intel/publish.sh).
+
+The full instructions the session follows are in [`intel/ROUTINE.md`](intel/ROUTINE.md). Edit that file or the trusted-source list to change how advice is produced; the next run picks up the change.
+
+The app reads the report from GitHub (cached for 15 minutes; the ↻ button in the Advice panel bypasses the cache). It also warns you when:
+
+- the report is more than 8 days old;
+- your Settings changed after the report was made;
+- a hero's power, stars or Exclusive Weapon changed since the report (that hero's card shows "updated since advice").
+
+**Settings** (⚙︎ button): Season, Goal (Balanced, PvP, or PvE / zombie events) and free-text Notes. Use Notes for things the sheet can't show, such as heroes you own outside your squads or what you're saving for.
+
+**After updating to this version,** the first time you open the app Google asks you to approve one new permission: "Connect to an external service". It's needed to download the report from GitHub.
+
+**Privacy:** the repo is public, so the report and your hero stats snapshot are publicly readable. Make the repo private only if you also give Apps Script a GitHub token, because a private repo's files can't be fetched without one.
+
 ## Configuration
 
 Top of `Code.gs`:
@@ -59,7 +85,7 @@ Renaming the tab or adding a squad (e.g. a fourth squad) only needs a change her
 Requires Node 18+. No dependencies.
 
 ```sh
-npm test          # runs Code.gs against an in-memory copy of the sheet
+npm test          # runs Code.gs against an in-memory copy of the sheet, plus the report validator
 npm run preview   # builds preview.html: the full app running locally on mock data
 ```
 

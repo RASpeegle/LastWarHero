@@ -20,7 +20,9 @@
         return {
           getDisplayValues() {
             ensure(r + nr - 1, c + nc - 1);
-            return grid.slice(r - 1, r - 1 + nr).map((row) => row.slice(c - 1, c - 1 + nc).map((v) => (v == null ? '' : String(v))));
+            // Like Sheets, a leading apostrophe forces text and is not displayed.
+            return grid.slice(r - 1, r - 1 + nr).map((row) => row.slice(c - 1, c - 1 + nc)
+              .map((v) => (v == null ? '' : String(v).replace(/^'/, ''))));
           },
           setValues(vals) {
             ensure(r + nr - 1, c + nc - 1);
@@ -58,13 +60,27 @@
     ['Missile', '', '', '', '', '', '', '', '', '', '', '', ''],
   ];
 
-  function install(target, rows) {
+  // opts.fetch(url) -> { code, body } stands in for UrlFetchApp.
+  function install(target, rows, opts) {
+    opts = opts || {};
     const sheet = createSheet(rows || SEED);
-    target.SpreadsheetApp = {
-      getActiveSpreadsheet: () => ({ getSheetByName: (n) => (n === 'Sheet1' ? sheet : null), getSheets: () => [sheet] }),
-      flush() {},
+    const tabs = { Sheet1: sheet };
+    const ss = {
+      getSheetByName: (n) => tabs[n] || null,
+      getSheets: () => Object.values(tabs),
+      insertSheet: (n) => (tabs[n] = createSheet([])),
     };
+    target.SpreadsheetApp = { getActiveSpreadsheet: () => ss, flush() {} };
     target.LockService = { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) };
+    const store = {};
+    target.CacheService = { getScriptCache: () => ({ get: (k) => (k in store ? store[k] : null), put: (k, v) => (store[k] = v) }) };
+    target.UrlFetchApp = {
+      fetch(url) {
+        const r = opts.fetch ? opts.fetch(url) : { code: 404, body: '404: Not Found' };
+        return { getResponseCode: () => r.code, getContentText: () => r.body };
+      },
+    };
+    sheet.tabs = tabs;
     return sheet;
   }
 

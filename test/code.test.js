@@ -95,3 +95,43 @@ test('header mismatch fails loudly', () => {
   sheet.grid[0][2] = 'Might';
   assert.throws(() => api.getHeroes(), /Column C header is "Might"/);
 });
+
+// --- Settings and advice -----------------------------------------------------
+
+function loadWith(opts) {
+  const ctx = {};
+  vm.createContext(ctx);
+  const sheet = install(ctx, null, opts);
+  vm.runInContext(SRC + '\n;this.__api = { getSettings, saveSettings, getAdvice };', ctx);
+  return { api: ctx.__api, sheet };
+}
+
+test('settings default when the tab is missing, and round-trip once saved', () => {
+  const { api, sheet } = loadWith();
+  assert.deepStrictEqual({ ...api.getSettings() }, { season: '', goal: 'Balanced', notes: '' });
+  const s = api.saveSettings({ season: ' 6 ', goal: 'PvP', notes: 'Saving  shards for DVA' });
+  assert.deepStrictEqual({ ...s }, { season: '6', goal: 'PvP', notes: 'Saving shards for DVA' });
+  assert.strictEqual(sheet.tabs.Settings.grid[0][0], 'Setting');
+  assert.strictEqual(sheet.tabs.Settings.grid[1][1], "'6"); // stored as text
+  assert.throws(() => api.saveSettings({ season: 'six', goal: 'PvP' }), /Season must be a number/);
+  assert.throws(() => api.saveSettings({ season: '6', goal: 'Whales' }), /Goal must be one of/);
+});
+
+test('advice: 404 means no report yet; 200 is parsed and cached; bad JSON is reported', () => {
+  let calls = 0;
+  let resp = { code: 404, body: 'nope' };
+  const { api } = loadWith({ fetch: () => { calls++; return resp; } });
+  assert.strictEqual(api.getAdvice().report, null);
+
+  resp = { code: 200, body: JSON.stringify({ version: 1, summary: 'hi' }) };
+  assert.strictEqual(api.getAdvice().report.summary, 'hi');
+  resp = { code: 200, body: JSON.stringify({ version: 1, summary: 'newer' }) };
+  assert.strictEqual(api.getAdvice().report.summary, 'hi'); // served from cache
+  assert.strictEqual(api.getAdvice(true).report.summary, 'newer'); // refresh bypasses cache
+  assert.strictEqual(calls, 3);
+
+  resp = { code: 200, body: '{oops' };
+  assert.throws(() => api.getAdvice(true), /not valid JSON/);
+  resp = { code: 500, body: '' };
+  assert.throws(() => api.getAdvice(true), /HTTP 500/);
+});

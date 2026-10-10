@@ -1,0 +1,14 @@
+{
+  "_comment": "Domains the weekly advice routine may cite. Edit this list to add or drop sources; validate.js rejects citations from anywhere else.",
+  "allowed": [
+    { "domain": "cpt-hedge.com", "tier": 1, "use": "Primary. Season-specific mechanics, Exclusive Weapon and Awakening guides, timelines, tactics cards." },
+    { "domain": "allclash.com", "tier": 2, "use": "Per-hero builds (minimum/sweetspot/optimum gear), lineups, tier lists. Some skill orders are paywalled; never infer paywalled content." },
+    { "domain": "lastwartutorial.com", "tier": 2, "use": "Hero, gear and squad fundamentals; free skill orders for some heroes. Some pages are older; check dates." },
+    { "domain": "pocketgamer.com", "tier": 3, "use": "Tier lists only, as corroboration. Never the sole basis for an upgrade action." }
+  ],
+  "excluded": [
+    { "pattern": "Top-up / recharge stores (topuplist, topuplive, buffbuff, and similar)", "reason": "Commercial content written to sell top-ups." },
+    { "pattern": "Content farms and hijacked domains (local news, council, retail sites hosting game guides)", "reason": "Low-quality or spam; frequently wrong hero names." },
+    { "pattern": "reddit.com", "reason": "Blocks AI search tools; cannot be retrieved or cited." }
+  ]
+}

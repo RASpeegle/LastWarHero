@@ -3,7 +3,7 @@
   "private": true,
   "description": "Last War hero squad tracker backed by the Hero Stats Google Sheet",
   "scripts": {
-    "test": "node --test test/code.test.js",
+    "test": "node --test test/*.test.js",
     "preview": "node test/build-preview.js preview.html"
   }
 }

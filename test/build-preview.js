@@ -6,10 +6,11 @@ const root = path.join(__dirname, '..');
 const mock = fs.readFileSync(path.join(__dirname, 'mock-apps-script.js'), 'utf8');
 const code = fs.readFileSync(path.join(root, 'apps-script/Code.gs'), 'utf8');
 const index = fs.readFileSync(path.join(root, 'apps-script/Index.html'), 'utf8');
+const advice = fs.readFileSync(path.join(root, 'intel/example-recommendations.json'), 'utf8');
 
 const shim = `<meta name="viewport" content="width=device-width, initial-scale=1">
 <script>${mock}</script>
-<script>MockAppsScript.install(window);</script>
+<script>MockAppsScript.install(window, null, { fetch: () => ({ code: 200, body: ${JSON.stringify(advice)} }) });</script>
 <script>${code}</script>
 <script>
   // Mirrors google.script.run: async, success/failure handlers, plain-object results.
@@ -18,7 +19,7 @@ const shim = `<meta name="viewport" content="width=device-width, initial-scale=1
       withSuccessHandler: (f) => runner(f, err),
       withFailureHandler: (f) => runner(ok, f),
     };
-    ['getHeroes', 'saveHero', 'removeHero'].forEach((fn) => {
+    ['getHeroes', 'saveHero', 'removeHero', 'getSettings', 'saveSettings', 'getAdvice'].forEach((fn) => {
       r[fn] = (...args) => setTimeout(() => {
         let res;
         try { res = JSON.parse(JSON.stringify(window[fn](...args))); }

@@ -97,12 +97,55 @@
   .toast.show { opacity: 1; }
   .toast.error { background: var(--danger); }
   .loading { padding: 40px 20px; text-align: center; color: var(--muted); }
+
+  .chip.next { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-weight: 600; }
+  .chip.changed { border: 1px dashed var(--border); background: transparent; }
+  .icon-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+  dialog.wide { width: min(780px, calc(100vw - 32px)); max-height: calc(100vh - 48px); }
+  .sheet-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 10px;
+    padding: 16px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .sheet-head h3 { margin: 0; font-size: 20px; flex: 1; }
+  .sheet-body { padding: 16px 20px 24px; }
+  .muted { color: var(--muted); }
+  .meta-line { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+  .banner { background: color-mix(in srgb, #f59e0b 16%, transparent); border-radius: 10px; padding: 10px 12px;
+    font-size: 14px; margin-bottom: 10px; }
+  .summary { font-size: 16px; margin: 0 0 18px; }
+  .advice h4 { margin: 20px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .actions-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .act { display: grid; grid-template-columns: 32px 1fr; gap: 10px; padding: 12px; border: 1px solid var(--border);
+    border-left: 4px solid var(--squad-color); border-radius: 12px; }
+  .act[data-squad="Tank"] { --squad-color: var(--tank); }
+  .act[data-squad="Air"] { --squad-color: var(--air); }
+  .act[data-squad="Missile"] { --squad-color: var(--missile); }
+  .act .rank { font-weight: 700; font-size: 18px; color: var(--squad-color); text-align: center; }
+  .act .title { font-weight: 700; }
+  .act .title span { font-weight: 400; color: var(--muted); }
+  .act .why { font-size: 14px; margin-top: 4px; }
+  .act .foot { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 13px; flex-wrap: wrap; }
+  .conf { font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+  .conf.high { color: #16a34a; } .conf.low { color: var(--danger); }
+  .cite { color: var(--accent); text-decoration: none; }
+  .squad-notes { display: grid; gap: 8px; }
+  .squad-notes p { margin: 0; font-size: 14px; }
+  .squad-notes b { color: var(--squad-color); }
+  .squad-notes [data-squad="Tank"] { --squad-color: var(--tank); }
+  .squad-notes [data-squad="Air"] { --squad-color: var(--air); }
+  .squad-notes [data-squad="Missile"] { --squad-color: var(--missile); }
+  .advice ul.plain, .advice ol.srcs { margin: 0; padding-left: 20px; font-size: 14px; }
+  .advice ol.srcs a { color: var(--accent); word-break: break-word; }
+  label textarea { display: block; width: 100%; margin-top: 4px; min-height: 80px; padding: 8px 10px; resize: vertical;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); font: inherit; font-size: 16px; color: inherit; }
+  .hint { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
 </style>
 </head>
 <body>
   <header>
     <h1>Last War Heroes</h1>
-    <button class="icon-btn" id="refresh" type="button" aria-label="Refresh">↻ Refresh</button>
+    <button class="icon-btn primary" id="open-advice" type="button">Advice</button>
+    <button class="icon-btn" id="open-settings" type="button" aria-label="Settings">⚙︎</button>
+    <button class="icon-btn" id="refresh" type="button" aria-label="Refresh">↻</button>
   </header>
   <nav class="tabs" id="tabs" role="tablist"></nav>
   <main class="board" id="board"><div class="loading">Loading heroes…</div></main>
@@ -145,13 +188,43 @@
     </form>
   </dialog>
 
+  <dialog id="advice-dlg" class="wide">
+    <div class="sheet-head">
+      <h3>Upgrade advice</h3>
+      <button class="btn" type="button" id="advice-refresh">↻</button>
+      <button class="btn" type="button" id="advice-close">Done</button>
+    </div>
+    <div class="sheet-body advice" id="advice-body"></div>
+  </dialog>
+
+  <dialog id="settings-dlg">
+    <form id="settings-form" novalidate>
+      <h3>Settings</h3>
+      <div class="fields">
+        <label>Season <input name="season" inputmode="numeric" placeholder="e.g. 6" maxlength="2"></label>
+        <label>Goal <select name="goal">
+          <option>Balanced</option><option>PvP</option><option>PvE / zombie events</option>
+        </select></label>
+        <label class="full">Notes for the advisor
+          <textarea name="notes" maxlength="300" placeholder="e.g. Saving universal shards for DVA; I own Tesla at 4 stars"></textarea></label>
+      </div>
+      <p class="hint">Used by the weekly advice report, generated Sundays around 6am Eastern.</p>
+      <div class="form-error" id="settings-error" role="alert"></div>
+      <div class="actions">
+        <span class="spacer"></span>
+        <button class="btn" type="button" id="settings-cancel">Cancel</button>
+        <button class="btn primary" type="submit" id="settings-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status"></div>
 
 <script>
 (function () {
   const FIELDS = ['name', 'squad', 'power', 'tier', 'ew', 'gearTL', 'gearBL', 'gearTR', 'gearBR',
     'skillTL', 'skillBL', 'skillTR', 'skillBR'];
-  const state = { data: null, active: null, editing: null, busy: false };
+  const state = { data: null, active: null, editing: null, busy: false, advice: null };
   const $ = (id) => document.getElementById(id);
   const form = $('form'), dlg = $('dlg');
 
@@ -203,6 +276,7 @@
               <div class="chips">
                 <span class="chip">★ ${esc(h.tier || '–')}</span>
                 <span class="chip">EW ${esc(h.ew || '–')}</span>
+                ${adviceChip(h)}
               </div>
               <div class="grids">
                 <div><div class="grid-label">Gear</div>
@@ -270,6 +344,87 @@
     $('delete').textContent = 'Remove';
   }
 
+  // ---- Advice -------------------------------------------------------------
+  const report = () => (state.advice && state.advice.report) || null;
+
+  // A hero "changed" if its tracked stats differ from the snapshot the report was built on.
+  function changedSinceReport(h) {
+    const r = report();
+    const s = r && r.inputs && r.inputs.heroes && r.inputs.heroes[h.name];
+    if (!s) return false;
+    return s.power !== h.power || String(s.tier) !== String(h.tier) || String(s.ew) !== String(h.ew);
+  }
+
+  function adviceChip(h) {
+    const r = report();
+    if (!r) return '';
+    if (changedSinceReport(h)) return '<span class="chip changed">updated since advice</span>';
+    const next = r.next && r.next[h.name];
+    return next ? `<span class="chip next">Next: ${esc(next)}</span>` : '';
+  }
+
+  function renderAdvice() {
+    const box = $('advice-body');
+    if (!state.advice) { box.innerHTML = '<div class="loading">Loading advice…</div>'; return; }
+    const r = report();
+    if (!r) {
+      box.innerHTML = '<p class="muted">No report has been published yet. The weekly run publishes one every Sunday morning.</p>';
+      return;
+    }
+    const settings = state.advice.settings || {};
+    const gen = new Date(r.generatedAt);
+    const age = Math.floor((Date.now() - gen.getTime()) / 86400000);
+    const inputs = r.inputs || {};
+    const banners = [];
+    if (age > 8) banners.push(`This report is ${age} days old. The weekly run may have failed.`);
+    if ((settings.season || '') !== (inputs.season || '') || (settings.goal || '') !== (inputs.goal || '')) {
+      banners.push('Your settings changed after this report. The next weekly run will use them.');
+    }
+    const changed = state.data ? state.data.squadNames.flatMap((s) => state.data.squads[s])
+      .filter(changedSinceReport).map((h) => h.name) : [];
+    if (changed.length) banners.push(`Updated since this report: ${changed.join(', ')}. Advice for them may already be done.`);
+
+    const srcById = {};
+    (r.sources || []).forEach((s) => (srcById[s.id] = s));
+    const cites = (ids) => (ids || []).filter((id) => srcById[id]).map((id) =>
+      `<a class="cite" href="${esc(srcById[id].url)}" target="_blank" rel="noopener" title="${esc(srcById[id].title)}">[${id}]</a>`).join(' ');
+
+    box.innerHTML = `
+      <p class="meta-line">${esc(gen.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }))}
+        · ${inputs.season ? 'Season ' + esc(inputs.season) : 'Season not set'} · ${esc(inputs.goal || '')}</p>
+      ${banners.map((b) => `<div class="banner">${esc(b)}</div>`).join('')}
+      <p class="summary">${esc(r.summary)}</p>
+      <h4>Do next</h4>
+      <ol class="actions-list">
+        ${(r.actions || []).map((a) => `
+          <li class="act" data-squad="${esc(a.squad)}">
+            <div class="rank">${esc(a.rank)}</div>
+            <div>
+              <div class="title">${esc(a.hero)}: ${esc(a.action)} <span>· ${esc(a.area)}</span></div>
+              <div class="why">${esc(a.why)}</div>
+              <div class="foot"><span class="conf ${esc(a.confidence)}">${esc(a.confidence)} confidence</span>${cites(a.sources)}</div>
+            </div>
+          </li>`).join('')}
+      </ol>
+      <h4>Squads</h4>
+      <div class="squad-notes">
+        ${Object.keys(r.squads || {}).map((s) => `<p data-squad="${esc(s)}"><b>${esc(s)}.</b> ${esc(r.squads[s])}</p>`).join('')}
+      </div>
+      ${(r.caveats || []).length ? `<h4>Limits of this report</h4><ul class="plain">${r.caveats.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
+      <h4>Sources</h4>
+      <ol class="srcs">${(r.sources || []).map((s) => `<li value="${esc(s.id)}"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></li>`).join('')}</ol>`;
+  }
+
+  async function loadAdvice(refresh) {
+    try {
+      state.advice = await call('getAdvice', !!refresh);
+      if (state.data) render();
+      renderAdvice();
+    } catch (e) {
+      $('advice-body').innerHTML = `<p class="muted">Could not load advice: ${esc(errMsg(e))}</p>`;
+    }
+  }
+
   async function load() {
     try {
       state.data = await call('getHeroes');
@@ -319,7 +474,41 @@
     mutate(call('removeHero', h.row, h.name), 'Removed ' + h.name);
   });
 
-  load();
+  $('open-advice').addEventListener('click', () => { renderAdvice(); $('advice-dlg').showModal(); });
+  $('advice-close').addEventListener('click', () => $('advice-dlg').close());
+  $('advice-refresh').addEventListener('click', async () => {
+    state.advice = null; renderAdvice(); await loadAdvice(true); toast('Advice refreshed');
+  });
+
+  const sform = $('settings-form');
+  $('open-settings').addEventListener('click', () => {
+    const s = (state.advice && state.advice.settings) || { season: '', goal: 'Balanced', notes: '' };
+    sform.elements.season.value = s.season || '';
+    sform.elements.goal.value = s.goal || 'Balanced';
+    sform.elements.notes.value = s.notes || '';
+    $('settings-error').textContent = '';
+    $('settings-dlg').showModal();
+  });
+  $('settings-cancel').addEventListener('click', () => $('settings-dlg').close());
+  sform.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('settings-save');
+    btn.disabled = true;
+    try {
+      const saved = await call('saveSettings', {
+        season: sform.elements.season.value, goal: sform.elements.goal.value, notes: sform.elements.notes.value,
+      });
+      state.advice = Object.assign({}, state.advice || { report: null }, { settings: saved });
+      $('settings-dlg').close();
+      toast('Settings saved');
+    } catch (err) {
+      $('settings-error').textContent = errMsg(err);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  load().then(() => loadAdvice(false));
 })();
 </script>
 </body>
