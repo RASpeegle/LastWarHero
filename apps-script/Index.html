@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg: #f2f3f5; --surface: #ffffff; --surface-2: #f6f7f9; --text: #15181d; --muted: #6b7280;
+    --border: #e2e5ea; --accent: #2563eb; --danger: #dc2626; --radius: 14px;
+    --tank: #b45309; --air: #0369a1; --missile: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115; --surface: #191c22; --surface-2: #22262e; --text: #eef0f3; --muted: #9aa3af;
+      --border: #2c313a; --accent: #60a5fa; --danger: #f87171;
+      --tank: #f59e0b; --air: #38bdf8; --missile: #f87171;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+
+  header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px;
+    padding: calc(12px + env(safe-area-inset-top)) 20px 12px; background: var(--bg); }
+  header h1 { margin: 0; font-size: 22px; flex: 1; }
+  .icon-btn { border: 1px solid var(--border); background: var(--surface); border-radius: 10px;
+    min-height: 44px; padding: 0 14px; cursor: pointer; }
+
+  .tabs { display: none; margin: 0 20px 12px; padding: 4px; gap: 4px; background: var(--surface-2);
+    border-radius: 12px; }
+  .tabs button { flex: 1; min-height: 40px; border: 0; border-radius: 9px; background: transparent;
+    font-weight: 600; cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+  .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;
+    padding: 0 20px calc(24px + env(safe-area-inset-bottom)); }
+  @media (max-width: 899px) {
+    .tabs { display: flex; }
+    .board { grid-template-columns: 1fr; }
+    .squad:not(.active) { display: none; }
+  }
+
+  .squad-head { display: flex; align-items: baseline; gap: 8px; margin: 4px 2px 10px; }
+  .squad-head h2 { margin: 0; font-size: 18px; color: var(--squad-color); }
+  .squad-head .meta { color: var(--muted); font-size: 14px; margin-left: auto; font-variant-numeric: tabular-nums; }
+  .squad[data-squad="Tank"] { --squad-color: var(--tank); }
+  .squad[data-squad="Air"] { --squad-color: var(--air); }
+  .squad[data-squad="Missile"] { --squad-color: var(--missile); }
+  .squad > .list { display: grid; gap: 10px; }
+
+  .card { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border);
+    border-left: 4px solid var(--squad-color); border-radius: var(--radius); padding: 12px 14px; cursor: pointer; }
+  .card:active { transform: scale(.99); }
+  .card-top { display: flex; align-items: baseline; gap: 8px; }
+  .card-top .name { font-weight: 700; font-size: 17px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-top .power { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .chips { display: flex; gap: 6px; margin: 6px 0 10px; flex-wrap: wrap; }
+  .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+  .grids { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 4px; }
+  .quad { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: auto auto; gap: 4px; }
+  .quad span { background: var(--surface-2); border-radius: 6px; text-align: center; padding: 3px 2px;
+    font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .quad span.max { color: var(--accent); font-weight: 600; }
+
+  .slot { width: 100%; min-height: 56px; border: 1.5px dashed var(--border); background: transparent;
+    border-radius: var(--radius); color: var(--muted); font-weight: 600; cursor: pointer; }
+  .empty-note { color: var(--muted); font-size: 14px; padding: 4px 2px; }
+
+  dialog { border: 0; border-radius: 18px; padding: 0; width: min(560px, calc(100vw - 32px));
+    background: var(--surface); color: var(--text); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  form { padding: 20px; }
+  form h3 { margin: 0 0 14px; font-size: 20px; }
+  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fields .full { grid-column: 1 / -1; }
+  fieldset { border: 0; padding: 0; margin: 0; }
+  legend { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0; margin-bottom: 6px; }
+  .pos-grid { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: auto auto; gap: 8px; }
+  label { display: block; font-size: 13px; color: var(--muted); }
+  label input, label select { display: block; width: 100%; margin-top: 4px; min-height: 44px; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); font-size: 16px; }
+  .actions { display: flex; gap: 10px; margin-top: 20px; }
+  .actions .spacer { flex: 1; }
+  .btn { min-height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface-2); font-weight: 600; cursor: pointer; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+  .btn.danger.armed { background: var(--danger); color: #fff; }
+  .btn:disabled { opacity: .5; }
+  .form-error { color: var(--danger); font-size: 14px; margin-top: 12px; min-height: 1em; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    background: #111827; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px;
+    opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100vw - 32px); z-index: 20; }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+  .loading { padding: 40px 20px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Last War Heroes</h1>
+    <button class="icon-btn" id="refresh" type="button" aria-label="Refresh">↻ Refresh</button>
+  </header>
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+  <main class="board" id="board"><div class="loading">Loading heroes…</div></main>
+
+  <dialog id="dlg">
+    <form id="form" method="dialog" novalidate>
+      <h3 id="dlg-title">Add hero</h3>
+      <div class="fields">
+        <label class="full">Name <input name="name" autocomplete="off" autocapitalize="words" maxlength="40" required></label>
+        <label>Squad <select name="squad" id="squad-select"></select></label>
+        <label>Power <input name="power" inputmode="numeric" placeholder="e.g. 4459565"></label>
+        <label>Tier Stars <input name="tier" inputmode="decimal" placeholder="e.g. 5 or 3.1"></label>
+        <label>Exclusive Weapon <input name="ew" placeholder="level or NA"></label>
+        <fieldset class="full">
+          <legend>Gear (level and stars, e.g. 40 5*)</legend>
+          <div class="pos-grid">
+            <label>Top Left <input name="gearTL"></label>
+            <label>Bottom Left <input name="gearBL"></label>
+            <label>Top Right <input name="gearTR"></label>
+            <label>Bottom Right <input name="gearBR"></label>
+          </div>
+        </fieldset>
+        <fieldset class="full">
+          <legend>Skills (level or Max)</legend>
+          <div class="pos-grid">
+            <label>Top Left <input name="skillTL"></label>
+            <label>Bottom Left <input name="skillBL"></label>
+            <label>Top Right <input name="skillTR"></label>
+            <label>Bottom Right <input name="skillBR"></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="form-error" id="form-error" role="alert"></div>
+      <div class="actions">
+        <button class="btn danger" type="button" id="delete">Remove</button>
+        <span class="spacer"></span>
+        <button class="btn" type="button" id="cancel">Cancel</button>
+        <button class="btn primary" type="submit" id="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  const FIELDS = ['name', 'squad', 'power', 'tier', 'ew', 'gearTL', 'gearBL', 'gearTR', 'gearBR',
+    'skillTL', 'skillBL', 'skillTR', 'skillBR'];
+  const state = { data: null, active: null, editing: null, busy: false };
+  const $ = (id) => document.getElementById(id);
+  const form = $('form'), dlg = $('dlg');
+
+  function call(fn, ...args) {
+    return new Promise((resolve, reject) => {
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args);
+    });
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString());
+  const cell = (v) => {
+    const t = v === '' || v == null ? '–' : v;
+    return `<span class="${/^max$/i.test(t) ? 'max' : ''}">${esc(t)}</span>`;
+  };
+
+  let toastTimer;
+  function toast(msg, isError) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' error' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (t.className = 'toast'), isError ? 5000 : 2200);
+  }
+  const errMsg = (e) => (e && e.message ? e.message : String(e)).replace(/^Exception:\s*/, '');
+
+  function render() {
+    const { squads, squadNames, squadSize } = state.data;
+    if (!state.active) state.active = squadNames[0];
+
+    $('tabs').innerHTML = squadNames.map((s) =>
+      `<button type="button" role="tab" data-tab="${esc(s)}" aria-selected="${s === state.active}">
+        ${esc(s)} <small>${squads[s].length}/${squadSize}</small></button>`).join('');
+
+    $('board').innerHTML = squadNames.map((s) => {
+      const heroes = squads[s].slice().sort((a, b) => (b.power || 0) - (a.power || 0));
+      const total = heroes.reduce((sum, h) => sum + (h.power || 0), 0);
+      const open = Math.max(0, squadSize - heroes.length);
+      return `<section class="squad${s === state.active ? ' active' : ''}" data-squad="${esc(s)}">
+        <div class="squad-head"><h2>${esc(s)}</h2>
+          <span class="meta">${heroes.length}/${squadSize} · ${fmt(total)}</span></div>
+        <div class="list">
+          ${heroes.map((h) => `
+            <button type="button" class="card" data-row="${h.row}">
+              <div class="card-top"><span class="name">${esc(h.name)}</span><span class="power">${fmt(h.power)}</span></div>
+              <div class="chips">
+                <span class="chip">★ ${esc(h.tier || '–')}</span>
+                <span class="chip">EW ${esc(h.ew || '–')}</span>
+              </div>
+              <div class="grids">
+                <div><div class="grid-label">Gear</div>
+                  <div class="quad">${cell(h.gearTL)}${cell(h.gearBL)}${cell(h.gearTR)}${cell(h.gearBR)}</div></div>
+                <div><div class="grid-label">Skills</div>
+                  <div class="quad">${cell(h.skillTL)}${cell(h.skillBL)}${cell(h.skillTR)}${cell(h.skillBR)}</div></div>
+              </div>
+            </button>`).join('')}
+          ${open ? `<button type="button" class="slot" data-add="${esc(s)}">+ Add hero (${open} open)</button>`
+                 : '<div class="empty-note">Squad full</div>'}
+        </div></section>`;
+    }).join('');
+
+    $('squad-select').innerHTML = squadNames.map((s) => `<option>${esc(s)}</option>`).join('');
+  }
+
+  function findHero(row) {
+    for (const s of state.data.squadNames) {
+      const h = state.data.squads[s].find((x) => x.row === row);
+      if (h) return h;
+    }
+    return null;
+  }
+
+  function openDialog(hero, squad) {
+    state.editing = hero;
+    form.reset();
+    $('form-error').textContent = '';
+    disarmDelete();
+    $('dlg-title').textContent = hero ? 'Edit ' + hero.name : 'Add hero';
+    $('delete').hidden = !hero;
+    FIELDS.forEach((f) => { form.elements[f].value = hero ? (hero[f] == null ? '' : hero[f]) : ''; });
+    form.elements.squad.value = hero ? hero.squad : squad;
+    dlg.showModal();
+    if (!hero) form.elements.name.focus();
+  }
+
+  function setBusy(b) {
+    state.busy = b;
+    ['save', 'delete', 'cancel'].forEach((id) => ($(id).disabled = b));
+    $('save').textContent = b ? 'Saving…' : 'Save';
+  }
+
+  async function mutate(promise, okMsg) {
+    setBusy(true);
+    $('form-error').textContent = '';
+    try {
+      state.data = await promise;
+      render();
+      dlg.close();
+      toast(okMsg);
+    } catch (e) {
+      const msg = errMsg(e);
+      $('form-error').textContent = msg;
+      if (/changed since you loaded/.test(msg)) { dlg.close(); toast(msg, true); load(); }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  let armTimer;
+  function disarmDelete() {
+    clearTimeout(armTimer);
+    $('delete').classList.remove('armed');
+    $('delete').textContent = 'Remove';
+  }
+
+  async function load() {
+    try {
+      state.data = await call('getHeroes');
+      render();
+    } catch (e) {
+      $('board').innerHTML = `<div class="loading">Could not load heroes: ${esc(errMsg(e))}</div>`;
+    }
+  }
+
+  // Events
+  $('board').addEventListener('click', (e) => {
+    const card = e.target.closest('.card');
+    if (card) return openDialog(findHero(Number(card.dataset.row)));
+    const add = e.target.closest('[data-add]');
+    if (add) openDialog(null, add.dataset.add);
+  });
+  $('tabs').addEventListener('click', (e) => {
+    const t = e.target.closest('[data-tab]');
+    if (!t) return;
+    state.active = t.dataset.tab;
+    render();
+  });
+  $('refresh').addEventListener('click', async () => { await load(); toast('Refreshed'); });
+  $('cancel').addEventListener('click', () => dlg.close());
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (state.busy) return;
+    const hero = {};
+    FIELDS.forEach((f) => (hero[f] = form.elements[f].value));
+    if (!hero.name.trim()) { $('form-error').textContent = 'Name is required.'; return; }
+    if (state.editing) { hero.row = state.editing.row; hero.originalName = state.editing.name; }
+    state.active = hero.squad;
+    mutate(call('saveHero', hero), state.editing ? 'Saved ' + hero.name.trim() : 'Added ' + hero.name.trim());
+  });
+
+  $('delete').addEventListener('click', () => {
+    const btn = $('delete');
+    if (!btn.classList.contains('armed')) {
+      btn.classList.add('armed');
+      btn.textContent = 'Tap again to remove';
+      armTimer = setTimeout(disarmDelete, 3000);
+      return;
+    }
+    disarmDelete();
+    const h = state.editing;
+    mutate(call('removeHero', h.row, h.name), 'Removed ' + h.name);
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
