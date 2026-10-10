@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-10T20:17:55Z",
+  "inputs": {
+    "season": "",
+    "goal": "Balanced",
+    "notes": "",
+    "heroes": {
+      "Kimberly": { "squad": "Tank", "power": 4459565, "tier": "5", "ew": "17" },
+      "Murphy": { "squad": "Tank", "power": 4314695, "tier": "5", "ew": "10" },
+      "Williams": { "squad": "Tank", "power": 3516320, "tier": "5", "ew": "NA" },
+      "Stetmann": { "squad": "Tank", "power": 3265648, "tier": "5", "ew": "NA" },
+      "Marshall": { "squad": "Tank", "power": 3144527, "tier": "5", "ew": "NA" },
+      "DVA": { "squad": "Air", "power": 3330489, "tier": "5", "ew": "10" },
+      "Carlie": { "squad": "Air", "power": 3189185, "tier": "5", "ew": "2" },
+      "Lucius": { "squad": "Air", "power": 2515799, "tier": "4", "ew": "NA" },
+      "Morrison": { "squad": "Air", "power": 2150868, "tier": "3.1", "ew": "NA" },
+      "Schuyler": { "squad": "Air", "power": 2130557, "tier": "3", "ew": "NA" }
+    }
+  },
+  "summary": "Your Tank squad is essentially built (18.7M, all gear at 40, skills mostly maxed), so the best return this week is breakpoint upgrades rather than more Tank depth. Take Kimberly's and then DVA's Exclusive Weapons to 20: it is the best cost-to-benefit level and the Season 6 prerequisite for Awakening. Make Air your growth squad (13.3M) by closing its obvious gaps, and hold off on Missile.",
+  "actions": [
+    {
+      "rank": 1, "squad": "Tank", "hero": "Kimberly", "area": "Exclusive Weapon",
+      "action": "Exclusive Weapon 17 → 20",
+      "why": "Level 20 is the recommended first target (7.5% boost, best cost-to-benefit). In Season 6 it is also required, with 5 stars, to unlock Awakening, and Kimberly is the week-1 Awakening hero. You are 3 levels away and already at 5 stars.",
+      "confidence": "high", "sources": [1, 2, 3]
+    },
+    {
+      "rank": 2, "squad": "Air", "hero": "DVA", "area": "Exclusive Weapon",
+      "action": "Exclusive Weapon 10 → 20",
+      "why": "Same breakpoint logic. DVA is top tier in every current list, is your strongest Air hero, and is the week-3 Season 6 Awakening hero, which also needs EW 20. Put universal shards here after Kimberly; the guide advises taking main-squad weapons to 20 before going past 20 on any weapon.",
+      "confidence": "high", "sources": [1, 2, 5]
+    },
+    {
+      "rank": 3, "squad": "Air", "hero": "DVA", "area": "Gear",
+      "action": "Armor and Radar (right column) 0 → 20",
+      "why": "DVA's attack gear is maxed at 40 but her defense pair is empty. Guides put attack gear first on attackers (done) and level gear in 10-level batches, because extra attributes unlock at 10, 20, 30 and 40. Cheap early levels add the most survivability for your top Air damage dealer.",
+      "confidence": "medium", "sources": [7, 8]
+    },
+    {
+      "rank": 4, "squad": "Air", "hero": "Lucius", "area": "Gear",
+      "action": "Bottom-right gear 37 → 40, then top-right 20 → 30",
+      "why": "Lucius is your Air defender (defense gear only, which matches guidance to build Armor and Radar first on defenders). 37 → 40 is three levels to the next attribute breakpoint. Pure single-type squads are the Season 6 standard, so Air needs a durable frontline.",
+      "confidence": "medium", "sources": [7, 4, 13]
+    },
+    {
+      "rank": 5, "squad": "Air", "hero": "Morrison", "area": "Gear",
+      "action": "Cannon and Chip (left column) 20 / 10 → 30",
+      "why": "Morrison is rated S tier for Season 6 and is an attacker, so attack gear comes first. Bottom-left at 10 is the weakest slot on any squad hero you're building.",
+      "confidence": "medium", "sources": [5, 7, 14]
+    },
+    {
+      "rank": 6, "squad": "Air", "hero": "Morrison", "area": "Stars",
+      "action": "Stars 3.1 → 4 as shards arrive",
+      "why": "Morrison and Schuyler (3 stars) are the lowest-star heroes in the squad you are growing. Morrison has the higher tier rating, so send hero shards to him first.",
+      "confidence": "medium", "sources": [5, 6]
+    },
+    {
+      "rank": 7, "squad": "Tank", "hero": "Kimberly", "area": "Skills",
+      "action": "Top-left skill 33 → 40",
+      "why": "Her only skill that isn't maxed, on your highest-impact hero. Skill medals can't be farmed, so spend them on core heroes before spreading them across Air.",
+      "confidence": "medium", "sources": [9, 2]
+    },
+    {
+      "rank": 8, "squad": "Tank", "hero": "Murphy", "area": "Exclusive Weapon",
+      "action": "Exclusive Weapon 10 → 20, after Kimberly and DVA",
+      "why": "Murphy is your Tank frontline and was the preferred 4+1 pick in earlier seasons. With hybrid cards gone in Season 6 his value is mainly in Tank. Worth reaching 20, but only once shards for the first two are covered.",
+      "confidence": "medium", "sources": [1, 4, 6]
+    },
+    {
+      "rank": 9, "squad": "Air", "hero": "Carlie", "area": "Exclusive Weapon",
+      "action": "Hold at EW 2; don't spend universal shards",
+      "why": "Guides advise saving universal shards for higher-priority heroes. Carlie's level-30 weapon skill triggers only when she falls, and she has dropped out of competitive mixed squads.",
+      "confidence": "medium", "sources": [10, 6]
+    },
+    {
+      "rank": 10, "squad": "Missile", "hero": "Missile squad", "area": "Lineup",
+      "action": "Don't start a Missile squad yet",
+      "why": "A full 5-hero same-type squad gets a 20% stat bonus and Season 6 favors pure squads, so a partial third squad underperforms and dilutes resources. Grow Air first. Exception: if you already own Tesla near 5 stars, her Awakening (week 5 or 6) is worth tracking.",
+      "confidence": "medium", "sources": [4, 6, 2]
+    }
+  ],
+  "squads": {
+    "Tank": "Complete and strong: every gear slot at 40, mostly maxed skills, all 5 stars. Remaining gains are Exclusive Weapons (Kimberly first) and gear stars. Williams, Stetmann and Marshall show NA for EW; if your server offers their weapons, they rank below the actions above.",
+    "Air": "Your growth squad. DVA and Carlie are solid, but there are clear gaps: DVA has no defense gear, Lucius and Morrison have partial gear, and Morrison and Schuyler are at 3 stars. Closing these is cheaper per point of power than adding Tank depth.",
+    "Missile": "Empty. Defer it: concentrating on two full same-type squads beats three partial ones under Season 6 squad rules."
+  },
+  "next": {
+    "Kimberly": "EW 17 → 20",
+    "DVA": "EW 10 → 20",
+    "Lucius": "Def gear → 40 / 30",
+    "Morrison": "Atk gear → 30, stars → 4",
+    "Murphy": "EW → 20 (after DVA)",
+    "Carlie": "Hold EW; save shards"
+  },
+  "caveats": [
+    "Season isn't set in the app's Settings, so this assumes Season 6, the current season in the sources. If your server is on another season, set it and the next weekly run will adjust.",
+    "Research used search summaries only: this environment blocks direct page reads from the guide sites, and some allclash skill orders are paywalled.",
+    "Gear columns are read as left = attack pair (Cannon, Chip) and right = defense pair (Armor, Radar), inferred from your data.",
+    "Sources disagree on Tesla's Awakening week (5 vs 6); it varies by server.",
+    "The tracker only knows squad heroes, so roster swaps are suggested conditionally."
+  ],
+  "sources": [
+    { "id": 1, "title": "Exclusive Weapons Complete Guide", "url": "https://cpt-hedge.com/guides/exclusive-weapons" },
+    { "id": 2, "title": "Hero Awakening Complete Guide", "url": "https://cpt-hedge.com/guides/hero-awakening" },
+    { "id": 3, "title": "Season 6 Kim Awakening", "url": "https://cpt-hedge.com/guides/season-6-kim-awakening" },
+    { "id": 4, "title": "Season 6 Tactics Cards Guide: New Cards & Squad Compositions", "url": "https://cpt-hedge.com/guides/season-6-tactics-cards" },
+    { "id": 5, "title": "Best Heroes Tier List in Last War Survival 2026 (Season 6)", "url": "https://www.allclash.com/tier-list-of-best-heroes-in-last-war-survival/" },
+    { "id": 6, "title": "Best Team Formations / Lineups in Last War Survival", "url": "https://www.allclash.com/best-team-formations-lineups-in-last-war-survival-game/" },
+    { "id": 7, "title": "Gears", "url": "https://www.lastwartutorial.com/gears/" },
+    { "id": 8, "title": "Best Build for Murphy (Skill + Gear Order)", "url": "https://www.allclash.com/best-build-for-murphy-in-last-war-survival-game-skill-gear-order/" },
+    { "id": 9, "title": "Heroes", "url": "https://www.lastwartutorial.com/heroes/" },
+    { "id": 10, "title": "Carlie Exclusive Weapon Guide (Season 2)", "url": "https://cpt-hedge.com/guides/season-2-carlie-exclusive-weapon" },
+    { "id": 13, "title": "Best Build for Lucius (Skill + Gear Order)", "url": "https://www.allclash.com/best-build-for-lucius-in-last-war-survival-game-skill-gear-order/" },
+    { "id": 14, "title": "Best Build for Morrison (Skill + Gear Order)", "url": "https://www.allclash.com/best-build-for-morrison-in-last-war-survival-game-skill-gear-order/" }
+  ]
+}
